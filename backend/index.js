@@ -1,18 +1,22 @@
 import fetch from 'node-fetch'
 import Koa from 'koa'
 import cors from '@koa/cors'
+import cron from 'node-cron'
 
 
 const apiUrl = 'http://www.cnb.cz/cs/financni_trhy/devizovy_trh/kurzy_devizoveho_trhu/denni_kurz.txt'
 
 let cachedData
-let lastFetchDate
+let fetchPromise
 
-async function getOrFetchData() {
-	if (lastFetchDate === undefined) {
-		lastFetchDate = new Date()
-		cachedData = await fetchData()
-	}
+function getOrFetchData() {
+	return cachedData || fetchPromise || fetchAndCacheData()
+}
+
+async function fetchAndCacheData() {
+	fetchPromise = fetchData()
+	cachedData = await fetchPromise
+	fetchPromise = undefined
 	return cachedData
 }
 
@@ -39,8 +43,10 @@ function parseLine(line) {
 	}
 }
 
+// schedule update every day at 14:35
+cron.schedule('35 2 * * *', fetchAndCacheData)
 
-
+// http server
 const app = new Koa()
 app.use(cors())
 
