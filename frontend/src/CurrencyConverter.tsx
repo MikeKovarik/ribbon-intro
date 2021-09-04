@@ -32,33 +32,46 @@ const ResultCurrency = styled.span`
 `
 
 const Input = styled.input`
-	width: 100%;
-	padding: 0.5rem;
-	border: 1px solid rgba(var(--theme-fg), 0.2);
-	border-radius: 4px;
-	box-sizing: border-box;
+	${mixins.Input}
 `;
 
 const Select = styled.select`
-	width: 100%;
-	padding: 0.5rem;
-	border: 1px solid rgba(var(--theme-fg), 0.2);
-	border-radius: 4px;
-	box-sizing: border-box;
+	${mixins.Input}
+`;
+
+const Button = styled.button`
+	${mixins.Input}
+	margin-top: 1rem;
+	text-transform: uppercase;
+	border: none;
+	background-color: rgba(var(--theme-fg), 0.7);
+	color: rgb(var(--theme-bg));
+	&:hover {
+		background-color: rgba(var(--theme-fg), 0.5);
+	}
+	&:active {
+		background-color: rgba(var(--theme-fg), 0.6);
+	}
 `;
 
 export default function CurrencyConverter({className}: {className?: string}): JSX.Element {
 	const {data} = useCurrencies()
 	const [czkValue, setCzkValue] = useState(100)
 	const [targetCurrency, setTargetCurrency] = useState('usd')
+	const [convertedValue, setConvertedValue] = useState(0)
 	let targetCurrencyValue = data?.find(currency => currency.code === targetCurrency)?.value ?? 0
-	let convertedValue = roundPrecision(czkValue / targetCurrencyValue)
+	const convert = () => setConvertedValue(roundPrecision(czkValue / targetCurrencyValue))
+	const onCurrencyChange = (code: string) => {
+		setTargetCurrency(code)
+		setConvertedValue(0)
+	}
 	return (
 		<Card className={className}>
 			<SubTitle>Částka v Kč</SubTitle>
 			<Input type="number" value={czkValue} onChange={e => setCzkValue(parseFloat(e.target.value))}></Input>
 			<SubTitle>Cílová měna</SubTitle>
-			<CurrencySelectBox value={targetCurrency} onChange={setTargetCurrency}></CurrencySelectBox>
+			<CurrencySelectBox value={targetCurrency} onChange={onCurrencyChange}></CurrencySelectBox>
+			<Button onClick={convert}>Převést</Button>
 			<SubTitle>Výsledek</SubTitle>
 			<div>
 				<ResultValue>{convertedValue}</ResultValue>
